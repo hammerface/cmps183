@@ -1,0 +1,214 @@
+timestamp: 2016-01-24T22:19:12.443559
+CREATE TABLE auth_user(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    first_name CHAR(128),
+    last_name CHAR(128),
+    email CHAR(512),
+    password CHAR(512),
+    registration_key CHAR(512),
+    reset_password_key CHAR(512),
+    registration_id CHAR(512)
+);
+success!
+timestamp: 2016-01-24T22:19:12.485731
+CREATE TABLE auth_group(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    role CHAR(512),
+    description TEXT
+);
+success!
+timestamp: 2016-01-24T22:19:12.523558
+CREATE TABLE auth_membership(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER REFERENCES auth_user (id) ON DELETE CASCADE  ,
+    group_id INTEGER REFERENCES auth_group (id) ON DELETE CASCADE  
+);
+success!
+timestamp: 2016-01-24T22:19:12.562755
+CREATE TABLE auth_permission(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    group_id INTEGER REFERENCES auth_group (id) ON DELETE CASCADE  ,
+    name CHAR(512),
+    table_name CHAR(512),
+    record_id INTEGER
+);
+success!
+timestamp: 2016-01-24T22:19:12.601530
+CREATE TABLE auth_event(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    time_stamp TIMESTAMP,
+    client_ip CHAR(512),
+    user_id INTEGER REFERENCES auth_user (id) ON DELETE CASCADE  ,
+    origin CHAR(512),
+    description TEXT
+);
+success!
+timestamp: 2016-01-24T22:19:12.644733
+CREATE TABLE auth_cas(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER REFERENCES auth_user (id) ON DELETE CASCADE  ,
+    created_on TIMESTAMP,
+    service CHAR(512),
+    ticket CHAR(512),
+    renew CHAR(1)
+);
+success!
+timestamp: 2016-01-24T22:37:08.405877
+CREATE TABLE historic(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ticker CHAR(512),
+    Date CHAR(512),
+    Open CHAR(512),
+    High CHAR(512),
+    Low CHAR(512),
+    Close CHAR(512),
+    Volume CHAR(512),
+    Adj CHAR(512)
+);
+success!
+success!
+timestamp: 2016-01-24T23:08:13.688268
+CREATE TABLE subscription(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    u_id INTEGER,
+    ticker CHAR(512),
+    limit DOUBLE,
+    flag CHAR(1)
+);
+success!
+timestamp: 2016-01-24T23:08:22.416393
+CREATE TABLE subscription(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    u_id INTEGER,
+    ticker CHAR(512),
+    limit DOUBLE,
+    flag CHAR(1)
+);
+success!
+timestamp: 2016-01-24T23:09:22.446233
+CREATE TABLE subscription(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    u_id INTEGER,
+    ticker CHAR(512),
+    limit DOUBLE,
+    flag CHAR(1)
+);
+success!
+timestamp: 2016-01-24T23:09:39.366494
+CREATE TABLE subscription(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    u_id INTEGER,
+    ticker CHAR(512),
+    value DOUBLE,
+    flag CHAR(1)
+);
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+timestamp: 2016-01-24T23:16:22.462412
+CREATE TABLE recent(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ticker CHAR(512),
+    datetime DATE,
+    price DOUBLE
+);
+success!
+timestamp: 2016-01-24T23:16:22.508729
+CREATE TABLE following(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    u_id INTEGER,
+    ticker CHAR(512)
+);
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+timestamp: 2016-01-24T23:29:22.186094
+ALTER TABLE auth_user ADD phone_number CHAR(512);
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+timestamp: 2016-01-24T23:36:13.326022
+ALTER TABLE auth_user ADD daily_message CHAR(1);
+timestamp: 2016-01-24T23:36:13.737011
+ALTER TABLE auth_user ADD notes TEXT;
+timestamp: 2016-01-24T23:36:13.914586
+ALTER TABLE auth_user ADD owned_stocks TEXT;
+success!
+success!
+success!
+success!
+success!
+success!

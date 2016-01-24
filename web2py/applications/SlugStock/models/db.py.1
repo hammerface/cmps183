@@ -1,0 +1,61 @@
+db = DAL("sqlite://storage.sqlite")
+
+from gluon.tools import Auth, Service, PluginManager
+
+auth = Auth(db)
+service = Service()
+plugins = PluginManager()
+
+## create all tables needed by auth if not custom tables
+auth.define_tables(username=False, signature=False)
+
+## configure email
+mail = auth.settings.mailer
+mail.settings.server = 'logging' if request.is_local else myconf.take('smtp.server')
+mail.settings.sender = myconf.take('smtp.sender')
+mail.settings.login = myconf.take('smtp.login')
+
+## configure auth policy
+auth.settings.registration_requires_verification = False
+auth.settings.registration_requires_approval = False
+auth.settings.reset_password_requires_verification = True
+
+#########################################################################
+## Define your tables below (or better in another model file) for example
+##
+## >>> db.define_table('mytable',Field('myfield','string'))
+##
+## Fields can be 'string','text','password','integer','double','boolean'
+##       'date','time','datetime','blob','upload', 'reference TABLENAME'
+## There is an implicit 'id integer autoincrement' field
+## Consult manual for more options, validators, etc.
+##
+## More API examples for controllers:
+##
+## >>> db.mytable.insert(myfield='value')
+## >>> rows=db(db.mytable.myfield=='value').select(db.mytable.ALL)
+## >>> for row in rows: print row.id, row.myfield
+#########################################################################
+
+## after defining tables, uncomment below to enable auditing
+auth.enable_record_versioning(db)
+
+db.define_table('historic',
+   Field('ticker'),
+   Field('Date'),
+   Field('Open'),
+   Field('High'),
+   Field('Low'),
+   Field('Close'),
+   Field('Volume'),
+   Field('Adj'),
+   )
+
+db.historic.ticker.requires = IS_NOT_EMPTY()
+db.historic.Date.requires = IS_DATE()
+db.historic.Open.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
+db.historic.High.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
+db.historic.Low.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
+db.historic.Close.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
+db.historic.Volume.requires = IS_INT_IN_RANGE(0, 1e100)
+db.historic.Adj.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
