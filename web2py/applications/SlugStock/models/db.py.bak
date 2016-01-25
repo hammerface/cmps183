@@ -13,8 +13,8 @@ plugins = PluginManager()
 auth.settings.extra_fields['auth_user']= [
    Field('phone_number', 'string', requires = IS_MATCH('^1?((-)\d{3}-?|\(\d{3}\))\d{3}-?\d{4}$', error_message='not a phone number')),
    Field('daily_message', 'boolean', default=False),
-   Field('owned_stocks', 'json', requires = IS_JSON()),
-   Field('notes', 'json', requires = IS_JSON())
+   Field('owned_stocks', 'json', writable=False,readable=False, requires = IS_JSON()),
+   Field('notes', 'json', writable=False,readable=False, requires = IS_JSON())
    ]
 ## create all tables needed by auth if not custom tables
 auth.define_tables(username=False, signature=False)
