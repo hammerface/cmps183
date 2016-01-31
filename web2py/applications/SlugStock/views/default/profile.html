@@ -1,0 +1,11 @@
+{{extend 'layout.html'}}
+<h1>Currently Following</h1>
+<ul>
+{{for follow in following:}}
+follow.ticker
+{{pass}}
+</ul>
+<h1>Follow a Stock</h1>
+<ul>
+{{=form}}
+</ul>

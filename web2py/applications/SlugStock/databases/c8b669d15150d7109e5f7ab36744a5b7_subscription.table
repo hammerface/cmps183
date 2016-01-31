@@ -32,12 +32,12 @@ I00
 sg6
 I2
 sg7
-S'INTEGER'
+S'INTEGER REFERENCES auth_user (id) ON DELETE CASCADE  '
 p14
 sg9
 I00
 sg10
-S'integer'
+S'reference auth_user'
 p15
 ssS'ticker'
 p16
@@ -71,10 +71,11 @@ p22
 sg9
 I00
 sg10
-g20
-ssS'value'
+S'id'
 p23
-(dp24
+ssS'value'
+p24
+(dp25
 g4
 I512
 sg5
@@ -83,10 +84,10 @@ sg6
 I4
 sg7
 S'DOUBLE'
-p25
+p26
 sg9
 I00
 sg10
 S'double'
-p26
+p27
 ss.

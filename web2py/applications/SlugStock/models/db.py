@@ -81,20 +81,18 @@ db.recent.datetime.requires = IS_DATETIME()
 db.recent.price.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
 
 db.define_table('following',
-   Field('u_id', 'integer'),
+   Field('u_id', 'reference auth_user', default=auth.user_id, readable=False, writable=False),
    Field('ticker', 'string')
    )
 
-db.following.u_id.requires = IS_INT_IN_RANGE(0, 1e100)
 db.following.ticker.requires = IS_NOT_EMPTY()
 
 db.define_table('subscription',
-   Field('u_id', 'integer'),
+   Field('u_id', 'reference auth_user', default=auth.user_id, readable=False, writable=False),
    Field('ticker', 'string'),
    Field('value', 'double'),
    Field('flag', 'boolean')
    )
 
-db.subscription.u_id.requires = IS_INT_IN_RANGE(0, 1e100)
 db.subscription.ticker.requires = IS_NOT_EMPTY()
 db.subscription.value.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
