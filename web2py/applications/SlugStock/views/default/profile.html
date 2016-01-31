@@ -2,7 +2,7 @@
 <h1>Currently Following</h1>
 <ul>
 {{for follow in following:}}
-<p>{{=follow.ticker}}<button type="button" onclick = 'window.location="{{=URL('default', 'delete_follow', args=[follow.ticker])}}";'>Click Me!</button></p>
+<p>{{=follow.ticker}} <a href="{{=URL('delete_follow', args=follow.id)}}">  Delete</a>
 {{pass}}
 </ul>
 <h1>Follow a Stock</h1>

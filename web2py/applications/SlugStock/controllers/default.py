@@ -14,18 +14,25 @@ def index():
 @auth.requires_login()
 def profile():
     form = SQLFORM(db.following)
+    #onvalidation = yahoo --- in form.process
     if form.process().accepted:
         response.flash = 'following new ticker'
     following = db(db.following.u_id==auth.user_id).select()
+    #listoftickers
+    #for follow in following:
+    #    listoftickers.add db(db.recent.ticker==follow.ticker).select()
     #following = db().select(db.following.ALL)
     #query = ((db.following.u_id==auth.user_id))
     #grid = SQLFORM.grid(query, user_signature=True, editable=False, create=False, csv=False)
     return dict(form=form, following=following)
 
 @auth.requires_login()
-def delete_follow(ticker_name):
-    db(db.following.u_id==auth.user_id & db.following.ticker==ticker_name).delete()
-    return dict()
+def delete_follow():
+    id = request.args(0)
+    remove = db(db.following.id==id).delete()
+    if remove:
+        redirect(URL('profile'))
+    return dict(remove=remove)
 
 def user():
     return dict(form=auth())
