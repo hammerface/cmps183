@@ -8,6 +8,15 @@
 ## - download is for downloading files uploaded in the db (does streaming)
 #########################################################################
 
+#def email_trevor():
+#    following = db(db.following).select()
+#    for follow in following:
+#        mail = auth.settings.mailer
+#        mail.settings.server = 'smtp.gmail.com:587'
+#        mail.settings.sender = 'ucscstock@gmail.com'
+#        mail.settings.login = 'ucscstock@gmail.com:julligjullig'
+#        mail.send('pbgreerb@ucsc.edu', 'Message subject', 'Plain text body of the message')
+
 def index():
     return dict()
 

@@ -96,3 +96,18 @@ db.define_table('subscription',
 
 db.subscription.ticker.requires = IS_NOT_EMPTY()
 db.subscription.value.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
+
+######################################################################
+
+def email_trevor():
+    #following = db(db.following).select()
+    #for follow in following:
+    mail = auth.settings.mailer
+    mail.settings.server = 'smtp.gmail.com:587'
+    mail.settings.sender = 'ucscstock@gmail.com'
+    mail.settings.login = 'ucscstock@gmail.com:julligjullig'
+    mail.send('pbgreerb@ucsc.edu', 'Message subject', 'Plain text body of the message')
+
+from gluon.scheduler import Scheduler
+scheduler = Scheduler(db, tasks=dict(email=email_trevor))
+#DO NOT UNCOMMENTscheduler.queue_task('email', period = 180, timeout=180)
