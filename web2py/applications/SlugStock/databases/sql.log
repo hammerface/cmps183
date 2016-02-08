@@ -21,7 +21,7 @@ timestamp: 2016-01-24T22:19:12.523558
 CREATE TABLE auth_membership(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER REFERENCES auth_user (id) ON DELETE CASCADE  ,
-    group_id INTEGER REFERENCES auth_group (id) ON DELETE CASCADE  
+    group_id INTEGER REFERENCES auth_group (id) ON DELETE CASCADE
 );
 success!
 timestamp: 2016-01-24T22:19:12.562755
@@ -647,6 +647,26 @@ CREATE TABLE scheduler_task_deps(
     task_child INTEGER REFERENCES scheduler_task (id) ON DELETE CASCADE  ,
     can_visit CHAR(1)
 );
+
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
+success!
 success!
 success!
 success!

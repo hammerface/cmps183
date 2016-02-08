@@ -17,14 +17,68 @@ def email_trevor():
         mail.settings.login = 'ucscstock@gmail.com:julligjullig'
         mail.send('pbgreerb@ucsc.edu', 'Message subject', 'Plain text body of the message')
 
+import urllib2
+import re
+import datetime
+
 def index():
     return dict()
+
+def getYahooPrice(ticker):
+    htmlfile = urllib2.urlopen("http://finance.yahoo.com/q?s="+ticker)
+    htmltext = htmlfile.read()
+    regex = '<span id="yfs_l84_'+ticker+'">(.+?)</span>'
+    pattern = re.compile(regex)
+    price = re.findall(pattern,htmltext)
+    try:
+        priceFloat = float(price[0])
+        print priceFloat
+        return priceFloat
+    except IndexError as e:
+        print 'invalid ticker'
+        return None
+
+def validateTicker(form):
+    #check that they are not already following this stock
+    print '================='
+    alreadyFollowing = db(db.following.u_id == auth.user.id
+                          and db.following.ticker == form.vars.ticker).select().first()
+    if (alreadyFollowing != None):
+        form.errors.ticker = 'You are already following that stock.'
+        return
+
+    #check in database
+    print form.vars.ticker
+    ticker = db(db.recent.ticker == form.vars.ticker).select().first()
+
+    if ticker != None:
+        print 'found in database'
+        print ticker.price
+    else: #call yahoo
+        print 'not found in database, calling yahoo'
+        yahooPrice = getYahooPrice(form.vars.ticker)
+        if yahooPrice != None:
+            print yahooPrice
+            db.recent.insert(ticker=form.vars.ticker,
+                             price=yahooPrice,
+                             datetime=datetime.datetime.today())
+        else:
+            form.errors.ticker = 'Stock not found.'
+
+    #check at yahoo
+        #get current price
+        #get csv file
 
 @auth.requires_login()
 def profile():
     form = SQLFORM(db.following)
     #onvalidation = yahoo --- in form.process
+<<<<<<< HEAD
     if form.process().accepted:
+=======
+    #if form.process(request.vars, onvalidation = validateTicker).accepted:
+    if form.accepts(request.vars, onvalidation = validateTicker):
+>>>>>>> 5f1a424a1438e0168e20a2f3b6428d3dc54c43f1
         response.flash = 'following new ticker'
     following = db(db.following.u_id==auth.user_id).select()
     #listoftickers
