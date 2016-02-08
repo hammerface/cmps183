@@ -41,8 +41,16 @@ def getYahooPrice(ticker):
 def validateTicker(form):
     #check that they are not already following this stock
     print '================='
-    alreadyFollowing = db(db.following.u_id == auth.user.id
-                          and db.following.ticker == form.vars.ticker).select().first()
+#    alreadyFollowing = False
+#    currentlyFollowing = db(db.following.u_id == auth.user_id).select()
+#    for follow in currentlyFollowing:
+#        if follow.ticker == forms.vars.ticker:
+#            alreadyFollowing = True
+#    if (alreadyFollowing == True):
+    query = db.following.id > 0
+    query &= db.following.u_id==auth.user_id
+    query &= db.following.ticker==form.vars.ticker
+    alreadyFollowing = db(query).select().first()
     if (alreadyFollowing != None):
         form.errors.ticker = 'You are already following that stock.'
         return
@@ -71,14 +79,30 @@ def validateTicker(form):
 
 @auth.requires_login()
 def profile():
+    #
+    recentPrices = db(db.recent.ticker!=None).select()
+    for currRecent in recentPrices:
+        htmlfile = urllib2.urlopen("http://finance.yahoo.com/q?s="+currRecent.ticker)
+        htmltext = htmlfile.read()
+        regex = '<span id="yfs_l84_'+currRecent.ticker+'">(.+?)</span>'
+        pattern = re.compile(regex)
+        newPrice = re.findall(pattern,htmltext)
+        try:
+            currRecent.update_record(price = float(newPrice[0]))
+        except IndexError as e:
+            currRecent.price = currRecent.price
+    #
     form = SQLFORM(db.following)
     if form.accepts(request.vars, onvalidation = validateTicker):
         response.flash = 'following new ticker'
     following = db(db.following.u_id==auth.user_id).select()
     follow_list = []
     for follower in following:
-        recent = db(db.recent.ticker == follower.ticker).select().first()
-        follow_list.append((follower.ticker, recent.price, follower.id))
+        try:
+            recent = db(db.recent.ticker == follower.ticker).select().first()
+            follow_list.append((follower.ticker, recent.price, follower.id))
+        except:
+            follow_list.append((follower.ticker, 0, follower.id))
     return dict(form=form, following=follow_list)
 
 @auth.requires_login()

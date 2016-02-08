@@ -99,14 +99,29 @@ db.subscription.value.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
 
 ######################################################################
 
+import urllib2
+import re
+import datetime
+
+def updateYahooPrices():
+    recentPrices = db(db.recent.ticker!=None).select()
+    for currRecent in recentPrices:
+        htmlfile = urllib2.urlopen("http://finance.yahoo.com/q?s="+currRecent.ticker)
+        htmltext = htmlfile.read()
+        regex = '<span id="yfs_l84_'+currRecent.ticker+'">(.+?)</span>'
+        pattern = re.compile(regex)
+        newPrice = re.findall(pattern,htmltext)
+        try:
+            currRecent.update_record(price = float(newPrice[0]))
+        except IndexError as e:
+            currRecent.price = currRecent.price
+
 def email_trevor():
-    #following = db(db.following).select()
-    #for follow in following:
     mail = auth.settings.mailer
     mail.settings.server = 'smtp.gmail.com:587'
     mail.settings.sender = 'ucscstock@gmail.com'
     mail.settings.login = 'ucscstock@gmail.com:julligjullig'
-    mail.send('pbgreerb@ucsc.edu', 'Message subject', 'Plain text body of the message')
+    mail.send('jrbrower@ucsc.edu', 'Message subject', 'Plain text body of the message')
 
 from gluon.scheduler import Scheduler
-scheduler = Scheduler(db, tasks=dict(email=email_trevor))
+scheduler = Scheduler(db, tasks=dict(email=email_trevor, updatePrices=updateYahooPrices))
