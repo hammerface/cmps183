@@ -8,6 +8,15 @@
 ## - download is for downloading files uploaded in the db (does streaming)
 #########################################################################
 
+def email_trevor():
+    following = db(db.following).select()
+    for follow in following:
+        mail = auth.settings.mailer
+        mail.settings.server = 'smtp.gmail.com:587'
+        mail.settings.sender = 'ucscstock@gmail.com'
+        mail.settings.login = 'ucscstock@gmail.com:julligjullig'
+        mail.send('pbgreerb@ucsc.edu', 'Message subject', 'Plain text body of the message')
+
 import urllib2
 import re
 import datetime
@@ -58,11 +67,26 @@ def validateTicker(form):
         else:
             form.errors.ticker = 'Stock not found.'
 
+<<<<<<< HEAD
+=======
+    #check at yahoo
+        #get current price
+        #get csv file
+>>>>>>> 05279d334ada234d2a3456e691bef9c89df315f8
 
 @auth.requires_login()
 def profile():
     form = SQLFORM(db.following)
+<<<<<<< HEAD
+=======
+    #onvalidation = yahoo --- in form.process
+<<<<<<< HEAD
+    if form.process().accepted:
+=======
+    #if form.process(request.vars, onvalidation = validateTicker).accepted:
+>>>>>>> 05279d334ada234d2a3456e691bef9c89df315f8
     if form.accepts(request.vars, onvalidation = validateTicker):
+>>>>>>> 5f1a424a1438e0168e20a2f3b6428d3dc54c43f1
         response.flash = 'following new ticker'
     following = db(db.following.u_id==auth.user_id).select()
     follow_list = []
