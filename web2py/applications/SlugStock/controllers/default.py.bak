@@ -37,44 +37,39 @@ def validateTicker(form):
     if (alreadyFollowing != None):
         form.errors.ticker = 'You are already following that stock.'
         return
-
     #check in database
     print form.vars.ticker
     ticker = db(db.recent.ticker == form.vars.ticker).select().first()
-
     if ticker != None:
         print 'found in database'
         print ticker.price
-    else: #call yahoo
+    else:
+        #call yahoo
         print 'not found in database, calling yahoo'
         yahooPrice = getYahooPrice(form.vars.ticker)
         if yahooPrice != None:
+            #get recent price and put in recent table
             print yahooPrice
             db.recent.insert(ticker=form.vars.ticker,
                              price=yahooPrice,
                              datetime=datetime.datetime.today())
+            #get csv file and put in historic table
+            #TODO
         else:
             form.errors.ticker = 'Stock not found.'
-    
-    #check at yahoo
-        #get current price
-        #get csv file
-    
+
+
 @auth.requires_login()
 def profile():
     form = SQLFORM(db.following)
-    #onvalidation = yahoo --- in form.process
-    #if form.process(request.vars, onvalidation = validateTicker).accepted:
     if form.accepts(request.vars, onvalidation = validateTicker):
         response.flash = 'following new ticker'
     following = db(db.following.u_id==auth.user_id).select()
-    #listoftickers
-    #for follow in following:
-    #    listoftickers.add db(db.recent.ticker==follow.ticker).select()
-    #following = db().select(db.following.ALL)
-    #query = ((db.following.u_id==auth.user_id))
-    #grid = SQLFORM.grid(query, user_signature=True, editable=False, create=False, csv=False)
-    return dict(form=form, following=following)
+    follow_list = []
+    for follower in following:
+        recent = db(db.recent.ticker == follower.ticker).select().first()
+        follow_list.append((follower.ticker, recent.price, follower.id))
+    return dict(form=form, following=follow_list)
 
 @auth.requires_login()
 def delete_follow():
