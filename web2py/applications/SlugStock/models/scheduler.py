@@ -23,7 +23,7 @@ def email_trevor():
     mail.settings.server = 'smtp.gmail.com:587'
     mail.settings.sender = 'ucscstock@gmail.com'
     mail.settings.login = 'ucscstock@gmail.com:julligjullig'
-    mail.send('pbgreerb@ucsc.edu', 'Message subject', 'Plain text body of the message')
+    mail.send('jrbrower@ucsc.edu', 'Message subject', 'Plain text body of the message')
 
 from gluon.scheduler import Scheduler
 scheduler = Scheduler(db, tasks=dict(email=email_trevor, updatePrices=updateYahooPrices))
