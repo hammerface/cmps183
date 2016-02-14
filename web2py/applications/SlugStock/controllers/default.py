@@ -20,6 +20,29 @@
 import urllib2
 import re
 import datetime
+import csv
+import urllib2
+
+#takes in string containing the ticker name
+
+def csv_read(ticker):
+    url = "http://ichart.finance.yahoo.com/table.csv?s=" + ticker
+    #url = "http://ichart.finance.yahoo.com/table.csv?s=AAPL&a=01&b=11&c=2016&d=01&e=14&f=2016&g=d&ignore=.csv"
+    response = urllib2.urlopen(url)
+    cr = csv.reader(response)
+    first = True
+    for row in cr:
+        if first:
+            first = False
+            continue
+        db.historic.insert(ticker=ticker,
+                            Date=row[0],
+                            Open=row[1],
+                            High=row[2],
+                            Low=row[3],
+                            Close=row[4],
+                            Volume=row[5],
+                            Adj=row[6])
 
 def index():
     return dict()
@@ -41,12 +64,6 @@ def getYahooPrice(ticker):
 def validateTicker(form):
     #check that they are not already following this stock
     print '================='
-#    alreadyFollowing = False
-#    currentlyFollowing = db(db.following.u_id == auth.user_id).select()
-#    for follow in currentlyFollowing:
-#        if follow.ticker == forms.vars.ticker:
-#            alreadyFollowing = True
-#    if (alreadyFollowing == True):
     query = db.following.id > 0
     query &= db.following.u_id==auth.user_id
     query &= db.following.ticker==form.vars.ticker
@@ -72,7 +89,7 @@ def validateTicker(form):
                              price=yahooPrice,
                              datetime=datetime.datetime.today())
             #get csv file and put in historic table
-            #TODO
+            csv_read(form.vars.ticker)
         else:
             form.errors.ticker = 'Stock not found.'
 
