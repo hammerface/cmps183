@@ -96,6 +96,19 @@ def validateTicker(form):
 
 @auth.requires_login()
 def profile():
+    #
+    recentPrices = db(db.recent.ticker!=None).select()
+    for currRecent in recentPrices:
+        htmlfile = urllib2.urlopen("http://finance.yahoo.com/q?s="+currRecent.ticker)
+        htmltext = htmlfile.read()
+        regex = '<span id="yfs_l84_'+currRecent.ticker+'">(.+?)</span>'
+        pattern = re.compile(regex)
+        newPrice = re.findall(pattern,htmltext)
+        try:
+            currRecent.update_record(price = float(newPrice[0]))
+        except IndexError as e:
+            currRecent.price = currRecent.price
+    #
     form = SQLFORM(db.following)
     if form.accepts(request.vars, onvalidation = validateTicker):
         response.flash = 'following new ticker'

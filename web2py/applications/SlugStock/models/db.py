@@ -2,7 +2,7 @@ from gluon.contrib.appconfig import AppConfig
 ## once in production, remove reload=True to gain full speed
 myconf = AppConfig(reload=True)
 
-db = DAL("sqlite://storage.sqlite", migrate=True)#migrate=True fake_migrate=True
+db = DAL("sqlite://storage.sqlite")
 
 from gluon.tools import Auth, Service, PluginManager
 
@@ -73,11 +73,11 @@ db.historic.Adj.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
 db.define_table('recent',
    Field('ticker', 'string'),
    Field('datetime', 'date'),
-   Field('price', 'double', writable=True),
+   Field('price', 'double'),
    )
 
 db.recent.ticker.requires = IS_NOT_EMPTY()
-db.recent.datetime.requires = IS_DATE()
+db.recent.datetime.requires = IS_DATETIME()
 db.recent.price.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
 
 db.define_table('following',
@@ -98,3 +98,30 @@ db.subscription.ticker.requires = IS_NOT_EMPTY()
 db.subscription.value.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
 
 ######################################################################
+
+import urllib2
+import re
+import datetime
+
+def updateYahooPrices():
+    recentPrices = db(db.recent.ticker!=None).select()
+    for currRecent in recentPrices:
+        htmlfile = urllib2.urlopen("http://finance.yahoo.com/q?s="+currRecent.ticker)
+        htmltext = htmlfile.read()
+        regex = '<span id="yfs_l84_'+currRecent.ticker+'">(.+?)</span>'
+        pattern = re.compile(regex)
+        newPrice = re.findall(pattern,htmltext)
+        try:
+            currRecent.update_record(price = float(newPrice[0]))
+        except IndexError as e:
+            currRecent.price = currRecent.price
+
+def email_trevor():
+    mail = auth.settings.mailer
+    mail.settings.server = 'smtp.gmail.com:587'
+    mail.settings.sender = 'ucscstock@gmail.com'
+    mail.settings.login = 'ucscstock@gmail.com:julligjullig'
+    mail.send('jrbrower@ucsc.edu', 'Message subject', 'Plain text body of the message')
+
+from gluon.scheduler import Scheduler
+scheduler = Scheduler(db, tasks=dict(email=email_trevor, updatePrices=updateYahooPrices))
