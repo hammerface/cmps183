@@ -1,11 +1,17 @@
 {{extend 'layout.html'}}
+<h1>Follow a Stock</h1>
+<ul>
+{{=followForm}}
+</ul>
+<ul>
+{{=subscriptionForm}}
+</ul>
 <h1>Currently Following</h1>
 <ul>
 {{for follow in following:}}
-<p>{{=follow[0]}} {{=follow[1]}} <a href="{{=URL('delete_follow', args=follow[2])}}">  Delete</a>
+    <p>{{=follow[0]}} {{=follow[1]}} <a href="{{=URL('delete_follow', args=follow[3])}}">  Delete</a></p>
+    {{for subscription in follow[2]:}}
+        <p>{{=subscription.value}} <a href="{{=URL('delete_subscription', args=subscription.id)}}">  Delete</a></p>
+    {{pass}}
 {{pass}}
-</ul>
-<h1>Follow a Stock</h1>
-<ul>
-{{=form}}
 </ul>

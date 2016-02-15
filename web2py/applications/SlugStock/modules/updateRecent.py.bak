@@ -1,0 +1,15 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from gluon import *
+
+recentPrices = db(db.recent.ticker!=None).select()
+for currRecent in recentPrices:
+    htmlfile = urllib2.urlopen("http://finance.yahoo.com/q?s="+currRecent.ticker)
+    htmltext = htmlfile.read()
+    regex = '<span id="yfs_l84_'+currRecent.ticker+'">(.+?)</span>'
+    pattern = re.compile(regex)
+    newPrice = re.findall(pattern,htmltext)
+    try:
+        currRecent.update_record(price=float(newPrice[0]))#newPrice is definately right, update_record is definately right, i can email the price, and currRecent.ticker to myself but not currRecent.price.
+    except IndexError as e:
+        i = 1
