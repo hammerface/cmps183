@@ -47,17 +47,20 @@ def email_daily():
     for user in users:
         following = db(db.following.u_id==user.id).select()
         follow_list = []
-        for stock in following:
-            recent = db(db.recent.ticker == stock.ticker).select().first()
-            follow_list.append((recent.ticker, recent.price))
-        follow_string = ("\n".join("Ticker: " ++ str(x[0]) ++ "Closing Price: ") for x in follow_list)
-        mail = auth.settings.mailer
-        mail.settings.server = 'smtp.gmail.com:587'
-        mail.settings.sender = 'ucscstock@gmail.com'
-        mail.settings.login = 'ucscstock@gmail.com:julligjullig'
-        mail.send(to='aramism@live.com',
-                  subject='Your Daily Stock Information',
-                  message=('Here are the closing prices of the stocks you are currently following: %s', follow_string))
+        if following:
+            for stock in following:
+                recent = db(db.recent.ticker == stock.ticker).select().first()
+                follow_list.append((recent.ticker, recent.price))
+            follow_string = "Hello, " + user.first_name + ". Here are the closing prices of the stocks you are currently following: \n"
+            for x in follow_list:
+                follow_string += "Ticker: " + x[0] + " Closing Price: " + str(x[1]) + "\n"
+            mail = auth.settings.mailer
+            mail.settings.server = 'smtp.gmail.com:587'
+            mail.settings.sender = 'ucscstock@gmail.com'
+            mail.settings.login = 'ucscstock@gmail.com:julligjullig'
+            mail.send(to=user.email,
+                      subject='Your Daily Stock Information Courtesy of SlugStock',
+                      message=(follow_string))
 
 from gluon.scheduler import Scheduler
 scheduler = Scheduler(db, tasks=dict(email=email_trevor, updatePrices=updateYahooPrices, emergency_email=emergency_email, email_daily=email_daily))
