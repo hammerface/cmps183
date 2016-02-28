@@ -13,7 +13,7 @@ plugins = PluginManager()
 auth.settings.extra_fields['auth_user']= [
    Field('phone_number', 'string', requires = IS_MATCH('^1?((-)\d{3}-?|\(\d{3}\))\d{3}-?\d{4}$', error_message='not a phone number')),
    Field('daily_message', 'boolean', default=False),
-   Field('owned_stocks', 'json', writable=False,readable=False, requires = IS_JSON()),
+   Field('netWorth', 'double', writable=False,),
    Field('notes', 'json', writable=False,readable=False, requires = IS_JSON())
    ]
 ## create all tables needed by auth if not custom tables
@@ -82,10 +82,12 @@ db.recent.price.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
 
 db.define_table('following',
    Field('u_id', 'reference auth_user', default=auth.user_id, readable=False, writable=False),
-   Field('ticker', 'string')
+   Field('ticker', 'string'),
+   Field('owned', 'integer', default=0)
    )
 
 db.following.ticker.requires = IS_NOT_EMPTY()
+db.following.owned.requires = IS_INT_IN_RANGE(0, 1e100)
 
 db.define_table('subscription',
    Field('u_id', 'reference auth_user', default=auth.user_id, readable=False, writable=False),

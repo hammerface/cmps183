@@ -3,6 +3,10 @@ import urllib2
 import re
 import datetime
 
+def remove_completed_tasks():
+    completedTasks = db(scheduler_task.status=="COMPLETED").delete()
+    db.commit()
+
 def emergency_email(email, ticker, label, limit):
     mail = auth.settings.mailer
     mail.settings.server = 'smtp.gmail.com:587'
@@ -40,7 +44,28 @@ def email_trevor():
     mail.settings.server = 'smtp.gmail.com:587'
     mail.settings.sender = 'ucscstock@gmail.com'
     mail.settings.login = 'ucscstock@gmail.com:julligjullig'
-    mail.send('jrbrower@ucsc.edu', 'Message subject', 'Plain text body of the message')
+    mail.send('twbarne@ucsc.edu', 'Message subject', 'Plain text body of the message')
+
+
+def email_daily():
+    users = db(db.auth_user).select()
+    for user in users:
+        following = db(db.following.u_id==user.id).select()
+        follow_list = []
+        if following:
+            for stock in following:
+                recent = db(db.recent.ticker == stock.ticker).select().first()
+                follow_list.append((recent.ticker, recent.price))
+            follow_string = "Hello, " + user.first_name + ". Here are the closing prices of the stocks you are currently following: \n"
+            for x in follow_list:
+                follow_string += "Ticker: " + x[0] + " Closing Price: " + str(x[1]) + "\n"
+            mail = auth.settings.mailer
+            mail.settings.server = 'smtp.gmail.com:587'
+            mail.settings.sender = 'ucscstock@gmail.com'
+            mail.settings.login = 'ucscstock@gmail.com:julligjullig'
+            mail.send(to=user.email,
+                      subject='Your Daily Stock Information Courtesy of SlugStock',
+                      message=(follow_string))
 
 from gluon.scheduler import Scheduler
-scheduler = Scheduler(db, tasks=dict(email=email_trevor, updatePrices=updateYahooPrices, emergency_email=emergency_email))
+scheduler = Scheduler(db, tasks=dict(email=email_daily, updatePrices=updateYahooPrices, emergency_email=emergency_email, clear=remove_completed_tasks))

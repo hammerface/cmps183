@@ -11,6 +11,28 @@
 import urllib2
 import re
 import datetime
+import csv
+
+#takes in string containing the ticker name
+
+def csv_read(ticker):
+    url = "http://ichart.finance.yahoo.com/table.csv?s=" + ticker
+    #url = "http://ichart.finance.yahoo.com/table.csv?s=AAPL&a=01&b=11&c=2016&d=01&e=14&f=2016&g=d&ignore=.csv"
+    response = urllib2.urlopen(url)
+    cr = csv.reader(response)
+    first = True
+    for row in cr:
+        if first:
+            first = False
+            continue
+        db.historic.insert(ticker=ticker,
+                            Date=row[0],
+                            Open=row[1],
+                            High=row[2],
+                            Low=row[3],
+                            Close=row[4],
+                            Volume=row[5],
+                            Adj=row[6])
 
 def index():
     return dict()
@@ -63,7 +85,7 @@ def validateTicker(form):
                              price=yahooPrice,
                              datetime=datetime.datetime.today())
             #get csv file and put in historic table
-            #TODO
+            csv_read(form.vars.ticker)
         else:
             form.errors.ticker = 'Stock not found.'
 
@@ -79,6 +101,7 @@ def validateSubscription(form):
 #maybe make this index()
 @auth.requires_login()
 def profile():
+    worth = 0
     followForm = SQLFORM(db.following)
     if followForm.accepts(request.vars, onvalidation = validateTicker):
         response.flash = 'following new ticker'
@@ -93,10 +116,14 @@ def profile():
             query = db.subscription.u_id == auth.user_id
             query &= db.subscription.ticker == follower.ticker
             subscriptions = db(query).select()
-            follow_list.append((follower.ticker, recent.price, subscriptions, follower.id))
+            follow_list.append((follower.ticker, recent.price, subscriptions, follower.id, follower.owned))
+            worth += follower.owned * recent.price
         except:
             follow_list.append((follower.ticker, 0, follower.id))
-    return dict(followForm=followForm, subscriptionForm=subscriptionForm, following=follow_list)
+    user = db(db.auth_user.id==auth.user_id).select().first()
+    user.update_record(netWorth=worth)
+    db.commit()
+    return dict(followForm=followForm, subscriptionForm=subscriptionForm, following=follow_list, user=user)
 
 @auth.requires_login()
 def delete_follow():

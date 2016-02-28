@@ -3,6 +3,10 @@ import urllib2
 import re
 import datetime
 
+def remove_completed_tasks():
+    completedTasks = db(db.scheduler_task.status=="COMPLETED").delete()
+    db.commit()
+
 def emergency_email(email, ticker, label, limit):
     mail = auth.settings.mailer
     mail.settings.server = 'smtp.gmail.com:587'
@@ -40,7 +44,8 @@ def email_trevor():
     mail.settings.server = 'smtp.gmail.com:587'
     mail.settings.sender = 'ucscstock@gmail.com'
     mail.settings.login = 'ucscstock@gmail.com:julligjullig'
-    mail.send('jrbrower@ucsc.edu', 'Message subject', 'Plain text body of the message')
+    mail.send('twbarne@ucsc.edu', 'Message subject', 'Plain text body of the message')
+
 
 def email_daily():
     users = db(db.auth_user).select()
@@ -63,4 +68,4 @@ def email_daily():
                       message=(follow_string))
 
 from gluon.scheduler import Scheduler
-scheduler = Scheduler(db, tasks=dict(email=email_trevor, updatePrices=updateYahooPrices, emergency_email=emergency_email, email_daily=email_daily))
+scheduler = Scheduler(db, tasks=dict(email=email_daily, updatePrices=updateYahooPrices, emergency_email=emergency_email, clear=remove_completed_tasks))

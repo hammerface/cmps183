@@ -101,6 +101,7 @@ def validateSubscription(form):
 #maybe make this index()
 @auth.requires_login()
 def profile():
+    worth = 0
     followForm = SQLFORM(db.following)
     if followForm.accepts(request.vars, onvalidation = validateTicker):
         response.flash = 'following new ticker'
@@ -115,10 +116,14 @@ def profile():
             query = db.subscription.u_id == auth.user_id
             query &= db.subscription.ticker == follower.ticker
             subscriptions = db(query).select()
-            follow_list.append((follower.ticker, recent.price, subscriptions, follower.id))
+            follow_list.append((follower.ticker, recent.price, subscriptions, follower.id, follower.owned))
+            worth += follower.owned * recent.price
         except:
             follow_list.append((follower.ticker, 0, follower.id))
-    return dict(followForm=followForm, subscriptionForm=subscriptionForm, following=follow_list)
+    user = db(db.auth_user.id==auth.user_id).select().first()
+    user.update_record(netWorth=worth)
+    db.commit()
+    return dict(followForm=followForm, subscriptionForm=subscriptionForm, following=follow_list, user=user)
 
 @auth.requires_login()
 def delete_follow():
