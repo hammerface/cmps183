@@ -69,7 +69,7 @@ def validateTicker(form):
         return
     #check in database
     print form.vars.ticker
-    ticker = db(db.recent.ticker == form.vars.ticker).select().first()
+    ticker = db(db.current.ticker == form.vars.ticker).select().first()
 
     if ticker != None:
         print 'found in database'
@@ -79,8 +79,11 @@ def validateTicker(form):
         print 'not found in database, calling yahoo'
         yahooPrice = getYahooPrice(form.vars.ticker)
         if yahooPrice != None:
-            #get recent price and put in recent table
+            #get current price and put in current table
             print yahooPrice
+            db.current.insert(ticker=form.vars.ticker,
+                             price=yahooPrice,
+                             datetime=datetime.datetime.today())
             db.recent.insert(ticker=form.vars.ticker,
                              price=yahooPrice,
                              datetime=datetime.datetime.today())
@@ -108,22 +111,28 @@ def profile():
     subscriptionForm = SQLFORM(db.subscription)
     if subscriptionForm.accepts(request.vars, onvalidation = validateSubscription):#do proper validation for following
         response.flash = 'subscribed to new ticker'
+    noteForm = SQLFORM(db.note)
+    if noteForm.accepts(request.vars, onvalidation = validateSubscription):#do proper validation for following
+        response.flash = 'new note added to ticker'
     following = db(db.following.u_id==auth.user_id).select()
     follow_list = []
     for follower in following:
         try:
             recent = db(db.recent.ticker == follower.ticker).select().first()
-            query = db.subscription.u_id == auth.user_id
-            query &= db.subscription.ticker == follower.ticker
-            subscriptions = db(query).select()
-            follow_list.append((follower.ticker, recent.price, subscriptions, follower.id, follower.owned))
             worth += follower.owned * recent.price
+            querySub = db.subscription.u_id == auth.user_id
+            querySub &= db.subscription.ticker == follower.ticker
+            queryNote = db.note.u_id == auth.user_id
+            queryNote &= db.note.ticker == follower.ticker
+            subscriptions = db(querySub).select()
+            notes = db(queryNote).select()
+            follow_list.append((follower.ticker, recent.price, subscriptions, follower.id, notes, follower.owned))
         except:
             follow_list.append((follower.ticker, 0, follower.id))
     user = db(db.auth_user.id==auth.user_id).select().first()
     user.update_record(netWorth=worth)
     db.commit()
-    return dict(followForm=followForm, subscriptionForm=subscriptionForm, following=follow_list, user=user)
+    return dict(followForm=followForm, subscriptionForm=subscriptionForm, following=follow_list, noteForm=noteForm, user=user)
 
 @auth.requires_login()
 def delete_follow():
@@ -137,6 +146,14 @@ def delete_follow():
 def delete_subscription():
     id = request.args(0)
     remove = db(db.subscription.id==id).delete()
+    if remove:
+        redirect(URL('profile'))
+    return dict(remove=remove)
+
+@auth.requires_login()
+def delete_note():
+    id = request.args(0)
+    remove = db(db.note.id==id).delete()
     if remove:
         redirect(URL('profile'))
     return dict(remove=remove)

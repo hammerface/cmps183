@@ -1,4 +1,8 @@
 {{extend 'layout.html'}}
+<h1>Current Net Worth</h1>
+<p>
+    $ {{=user.netWorth}}
+</p>
 <h1>Follow a Stock</h1>
 <ul>
 {{=followForm}}
@@ -6,16 +10,19 @@
 <ul>
 {{=subscriptionForm}}
 </ul>
-<h1>Current Net Worth</h1>
-<p>
-    $ {{=user.netWorth}}
-</p>
+<ul>
+{{=noteForm}}
+</ul>
 <h1>Currently Following</h1>
 <ul>
 {{for follow in following:}}
-    <p>{{=follow[0]}} | Current Price $ {{=follow[1]}} | You Own {{=follow[4]}} of this stock | <a href="{{=URL('delete_follow', args=follow[3])}}">  Delete</a></p>
+    <p>{{=follow[0]}} | Current Price $ {{=follow[1]}} | You Own {{=follow[5]}} of this stock | <a href="{{=URL('delete_follow', args=follow[3])}}">  Delete</a></p>
     {{for subscription in follow[2]:}}
-        <p>{{=subscription.value}} <a href="{{=URL('delete_subscription', args=subscription.id)}}">  Delete</a></p>
+        <p>Limit: {{=subscription.value}} <a href="{{=URL('delete_subscription', args=subscription.id)}}">  Delete</a></p>
     {{pass}}
+    {{for note in follow[4]:}}
+        <p>note: {{=note.note}} <a href="{{=URL('delete_note', args=note.id)}}">  Delete</a></p>
+    {{pass}}
+-
 {{pass}}
 </ul>

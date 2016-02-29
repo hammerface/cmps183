@@ -65,10 +65,11 @@ I00
 sg6
 I3
 sg7
-S'TIMESTAMP'
+S'DATE'
 p21
 sg9
 I00
 sg10
-g19
+S'date'
+p22
 ss.

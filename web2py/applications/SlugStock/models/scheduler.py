@@ -17,24 +17,27 @@ def emergency_email(email, ticker, label, limit):
     mail.send(email, title , body)
 
 def updateYahooPrices():
-    recentPrices = db(db.recent.ticker!=None).select()
-    for currRecent in recentPrices:
-        htmlfile = urllib2.urlopen("http://finance.yahoo.com/q?s="+currRecent.ticker)
+    currentPrices = db(db.current.ticker!=None).select()
+    for currPrice in currentPrices:
+        htmlfile = urllib2.urlopen("http://finance.yahoo.com/q?s="+currPrice.ticker)
         htmltext = htmlfile.read()
-        regex = '<span id="yfs_l84_'+currRecent.ticker+'">(.+?)</span>'
+        regex = '<span id="yfs_l84_'+currPrice.ticker+'">(.+?)</span>'
         pattern = re.compile(regex)
         newPrice = re.findall(pattern,htmltext)
+        db.recent.insert(ticker=currPrice.ticker,
+                         price=float(newPrice[0]),
+                         datetime=datetime.datetime.today())
         try:
-            subscriptions = db(db.subscription.ticker==currRecent.ticker).select()
+            subscriptions = db(db.subscription.ticker==currPrice.ticker).select()
             for currSub in subscriptions:
                 email = db(db.auth_user.id==currSub.u_id).select().first().email
-                if currRecent.price < currSub.value and currSub.value < float(newPrice[0]):
+                if currPrice.price < currSub.value and currSub.value < float(newPrice[0]):
                     scheduler.queue_task('emergency_email', [email, currSub.ticker, 'risen above', currSub.value])
                     db(db.subscription.id==currSub.id).delete()
-                elif currRecent.price > currSub.value and currSub.value > float(newPrice[0]):
+                elif currPrice.price > currSub.value and currSub.value > float(newPrice[0]):
                     scheduler.queue_task('emergency_email', [email, currSub.ticker, 'fallen below', currSub.value])
                     db(db.subscription.id==currSub.id).delete()
-            currRecent.update_record(price=float(newPrice[0]))
+            currPrice.update_record(price=float(newPrice[0]))
             db.commit()
         except IndexError as e:
             i = 1#do nothing
@@ -54,8 +57,8 @@ def email_daily():
         follow_list = []
         if following:
             for stock in following:
-                recent = db(db.recent.ticker == stock.ticker).select().first()
-                follow_list.append((recent.ticker, recent.price))
+                current = db(db.current.ticker == stock.ticker).select().first()
+                follow_list.append((current.ticker, current.price))
             follow_string = "Hello, " + user.first_name + ". Here are the closing prices of the stocks you are currently following: \n"
             for x in follow_list:
                 follow_string += "Ticker: " + x[0] + " Closing Price: " + str(x[1]) + "\n"

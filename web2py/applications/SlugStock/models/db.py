@@ -13,6 +13,7 @@ plugins = PluginManager()
 auth.settings.extra_fields['auth_user']= [
    Field('phone_number', 'string', requires = IS_MATCH('^1?((-)\d{3}-?|\(\d{3}\))\d{3}-?\d{4}$', error_message='not a phone number')),
    Field('daily_message', 'boolean', default=False),
+    Field('get_texts', 'boolean', default=False),
    Field('netWorth', 'double', writable=False,),
    Field('notes', 'json', writable=False,readable=False, requires = IS_JSON())
    ]
@@ -70,14 +71,24 @@ db.historic.Close.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
 db.historic.Volume.requires = IS_INT_IN_RANGE(0, 1e100)
 db.historic.Adj.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
 
-db.define_table('recent',
+db.define_table('current',
    Field('ticker', 'string'),
    Field('datetime', 'date'),
    Field('price', 'double', writable=True),
    )
 
+db.current.ticker.requires = IS_NOT_EMPTY()
+db.current.datetime.requires = IS_DATE()
+db.current.price.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
+
+db.define_table('recent',
+   Field('ticker', 'string'),
+   Field('datetime', 'datetime', default=request.now),
+   Field('price', 'double'),
+   )
+
 db.recent.ticker.requires = IS_NOT_EMPTY()
-db.recent.datetime.requires = IS_DATE()
+db.recent.datetime.requires = IS_DATETIME()
 db.recent.price.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
 
 db.define_table('following',
@@ -93,6 +104,12 @@ db.define_table('subscription',
    Field('u_id', 'reference auth_user', default=auth.user_id, readable=False, writable=False),
    Field('ticker', 'string'),
    Field('value', 'double')
+   )
+
+db.define_table('note',
+   Field('u_id', 'reference auth_user', default=auth.user_id, readable=False, writable=False),
+   Field('ticker', 'string'),
+   Field('note', 'string')
    )
 
 db.subscription.ticker.requires = IS_NOT_EMPTY()
