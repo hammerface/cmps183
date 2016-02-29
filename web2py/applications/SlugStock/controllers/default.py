@@ -86,6 +86,7 @@ def validateTicker(form):
                              datetime=datetime.datetime.today())
             db.recent.insert(ticker=form.vars.ticker,
                              price=yahooPrice,
+                             day=db(db.day.day!=None).select().first().day,
                              datetime=datetime.datetime.today())
             #get csv file and put in historic table
             csv_read(form.vars.ticker)

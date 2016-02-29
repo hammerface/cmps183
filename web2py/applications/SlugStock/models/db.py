@@ -84,11 +84,13 @@ db.current.price.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
 db.define_table('recent',
    Field('ticker', 'string'),
    Field('datetime', 'datetime', default=request.now),
+   Field('day', 'integer'),
    Field('price', 'double'),
    )
 
 db.recent.ticker.requires = IS_NOT_EMPTY()
 db.recent.datetime.requires = IS_DATETIME()
+db.recent.day.requires = IS_INT_IN_RANGE(0, 1e100)
 db.recent.price.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
 
 db.define_table('following',
@@ -114,5 +116,9 @@ db.define_table('note',
 
 db.subscription.ticker.requires = IS_NOT_EMPTY()
 db.subscription.value.requires = IS_FLOAT_IN_RANGE(-1e100, 1e100)
+
+db.define_table('day',
+   Field('day', 'integer', default=0)
+   )
 
 ######################################################################

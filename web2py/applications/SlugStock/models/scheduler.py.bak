@@ -26,6 +26,7 @@ def updateYahooPrices():
         newPrice = re.findall(pattern,htmltext)
         db.recent.insert(ticker=currPrice.ticker,
                          price=float(newPrice[0]),
+                         day=db(db.day.day!=None).select().first().day,
                          datetime=datetime.datetime.today())
         try:
             subscriptions = db(db.subscription.ticker==currPrice.ticker).select()
@@ -70,5 +71,10 @@ def email_daily():
                       subject='Your Daily Stock Information Courtesy of SlugStock',
                       message=(follow_string))
 
+def nextday():
+    day = db(db.day.day!=None).select().first()
+    day.update_record(day=day.day)
+    db.commit()
+
 from gluon.scheduler import Scheduler
-scheduler = Scheduler(db, tasks=dict(email=email_daily, updatePrices=updateYahooPrices, emergency_email=emergency_email, clear=remove_completed_tasks))
+scheduler = Scheduler(db, heartbeat=60, tasks=dict(email=email_daily, updatePrices=updateYahooPrices, emergency_email=emergency_email, clear=remove_completed_tasks, nextday=nextday))
