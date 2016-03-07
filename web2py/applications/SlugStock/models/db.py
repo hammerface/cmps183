@@ -11,7 +11,8 @@ service = Service()
 plugins = PluginManager()
 
 auth.settings.extra_fields['auth_user']= [
-   Field('phone_number', 'string', requires = IS_MATCH('^1?((-)\d{3}-?|\(\d{3}\))\d{3}-?\d{4}$', error_message='not a phone number')),
+   Field('phone_number', 'string', requires = IS_MATCH('^\d{3}-?\d{3}-?\d{4}$', error_message='example: 111-555-2345')),
+   Field('phone_provider', 'string', requires = IS_IN_SET(('AT&T','Metro PCS','Sprint PCS', 'T-Mobile USA (tmail)', 'Verizon Wireless (vtext)', 'Virgin Mobile USA'))),
    Field('daily_message', 'boolean', default=False),
    Field('owned_stocks', 'json', writable=False,readable=False, requires = IS_JSON()),
    Field('notes', 'json', writable=False,readable=False, requires = IS_JSON())

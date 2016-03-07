@@ -13,26 +13,67 @@ import re
 import datetime
 import csv
 
-#takes in string containing the ticker name
+from gluon.contrib.sms_utils import SMSCODES, sms_email
+"""
+def text_me(phone, provider):
+    mail = auth.settings.mailer
+    mail.settings.server = 'smtp.gmail.com:587'
+    mail.settings.sender = 'ucscstock@gmail.com'
+    mail.settings.login = 'ucscstock@gmail.com:julligjullig'
+    phone = '925-683-6184'
+    provider = 'AT&T'
+    email = sms_email(phone, provider)
+    mail.send(to=email, subject='Hello', message='Goodbye')
+"""
 
-def csv_read(ticker):
-    url = "http://ichart.finance.yahoo.com/table.csv?s=" + ticker
-    #url = "http://ichart.finance.yahoo.com/table.csv?s=AAPL&a=01&b=11&c=2016&d=01&e=14&f=2016&g=d&ignore=.csv"
-    response = urllib2.urlopen(url)
-    cr = csv.reader(response)
-    first = True
-    for row in cr:
-        if first:
-            first = False
-            continue
-        db.historic.insert(ticker=ticker,
-                            Date=row[0],
-                            Open=row[1],
-                            High=row[2],
-                            Low=row[3],
-                            Close=row[4],
-                            Volume=row[5],
-                            Adj=row[6])
+def csv_daily():
+    # gets unique tickers
+    tickers = db(db.historic.id > 0).select(db.historic.ticker, distinct=True)
+
+    #month, day, year
+    date = datetime.date.today()
+    month = str(date.month - 1)
+    day = str(date.day)
+    year = str(date.year)
+    if len(month) < 2:
+        month = "0" + month
+    if len(day) < 2:
+        day = "0" + day
+
+    urlend = ("&a=" + month + "&b=" + "2" + "&c=" + year
+               + "&d=" + month + "&e=" + "2" + "&f=" + year
+               + "&g=d&ignore=.csv")
+
+    for row in tickers:
+        i = 1
+        try:
+            url = "http://real-chart.finance.yahoo.com/table.csv?s=" + row.ticker + urlend
+            print url
+            response = urllib2.urlopen(url)
+            cr = csv.reader(response)
+            for rowcr in cr:
+                if i == 1:
+                    i = 2
+                    continue
+                alreadyin = db((db.historic.ticker==row.ticker) & (db.historic.Date==rowcr[0])).select().first()
+                if alreadyin != None:
+                    print "Its already in the database"
+                    break
+                db.historic.insert(ticker=row.ticker,
+                                Date=rowcr[0],
+                                Open=rowcr[1],
+                                High=rowcr[2],
+                                Low=rowcr[3],
+                                Close=rowcr[4],
+                                Volume=rowcr[5],
+                                Adj=rowcr[6])
+                i = i + 1
+        except urllib2.HTTPError:
+            print 'historic stock info not found'
+        if i == 2:
+            print 'there was no new stock info'
+
+
 
 def index():
     return dict()
@@ -85,7 +126,8 @@ def validateTicker(form):
                              price=yahooPrice,
                              datetime=datetime.datetime.today())
             #get csv file and put in historic table
-            csv_read(form.vars.ticker)
+            scheduler.queue_task('csv_read', [form.vars.ticker])
+            #csv_read(form.vars.ticker)
         else:
             form.errors.ticker = 'Stock not found.'
 
@@ -101,6 +143,8 @@ def validateSubscription(form):
 #maybe make this index()
 @auth.requires_login()
 def profile():
+    csv_daily()
+    #text_me(None, None)
     followForm = SQLFORM(db.following)
     if followForm.accepts(request.vars, onvalidation = validateTicker):
         response.flash = 'following new ticker'
