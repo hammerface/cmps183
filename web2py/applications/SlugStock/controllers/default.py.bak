@@ -86,9 +86,10 @@ def validateTicker(form):
                              datetime=datetime.datetime.today())
             db.recent.insert(ticker=form.vars.ticker,
                              price=yahooPrice,
+                             day=db(db.day.day!=None).select().first().day,
                              datetime=datetime.datetime.today())
             #get csv file and put in historic table
-            csv_read(form.vars.ticker)
+            scheduler.queue_task('csv_read', [form.vars.ticker])
         else:
             form.errors.ticker = 'Stock not found.'
 
@@ -101,44 +102,90 @@ def validateSubscription(form):
         form.errors.ticker = 'You are not following that stock.'
         return
 
+@auth.requires_login()
+def update_follow():
+    follow2update = db(db.following.id==request.args(0, cast=int)).select().first()
+    follow2update.update_record(owned=request.args(1, cast=int))
+    following = db(db.following.u_id==auth.user_id).select()
+    worth = 0
+    for follower in following:
+        try:
+            current = db(db.current.ticker == follower.ticker).select().first()
+            worth += follower.owned * current.price
+        except:
+            i=1
+    user = db(db.auth_user.id==auth.user_id).select().first()
+    user.update_record(netWorth=worth)
+    db.commit()
+    return str(worth)
+
+@auth.requires_login()
+def update_note():
+    note2update = db(db.note.id==request.args(0, cast=int)).select().first()
+    note2update.update_record(note=request.args(1))
+    db.commit()
+    return 0
+
+@auth.requires_login()
+def update_subsc():
+    subscription2update = db(db.subscription.id==request.args(0, cast=int)).select().first()
+    subscription2update.update_record(value=request.args(1, cast=int))
+    db.commit()
+    return 0
+
 #maybe make this index()
 @auth.requires_login()
 def profile():
     worth = 0
+    user = db(db.auth_user.id==auth.user_id).select().first()
     followForm = SQLFORM(db.following)
     if followForm.accepts(request.vars, onvalidation = validateTicker):
         response.flash = 'following new ticker'
-    subscriptionForm = SQLFORM(db.subscription)
-    if subscriptionForm.accepts(request.vars, onvalidation = validateSubscription):#do proper validation for following
-        response.flash = 'subscribed to new ticker'
-    noteForm = SQLFORM(db.note)
-    if noteForm.accepts(request.vars, onvalidation = validateSubscription):#do proper validation for following
-        response.flash = 'new note added to ticker'
     following = db(db.following.u_id==auth.user_id).select()
     follow_list = []
+    count = 0
     for follower in following:
         try:
-            recent = db(db.recent.ticker == follower.ticker).select().first()
-            worth += follower.owned * recent.price
+            count = count + 1
+            historic_list = []
+            #historic_records = db(db.historic.ticker == follower.ticker).select()
+            #for historic in historic_records:
+            #    historic_list.append(historic.Close)
+            current = db(db.current.ticker == follower.ticker).select().first()
+            worth += follower.owned * current.price
             querySub = db.subscription.u_id == auth.user_id
             querySub &= db.subscription.ticker == follower.ticker
             queryNote = db.note.u_id == auth.user_id
             queryNote &= db.note.ticker == follower.ticker
+            subscriptionForm = SQLFORM(db.subscription, fields=['value'])
+            subscriptionForm.vars.ticker = follower.ticker
+            if subscriptionForm.accepts(request.vars, formname = 'sub_form_'+str(count), onvalidation = validateSubscription):#do proper validation for following
+                response.flash = 'subscribed to new ticker'
+            noteForm = SQLFORM(db.note, fields=['note'])
+            noteForm.vars.ticker = follower.ticker
+            if noteForm.accepts(request.vars, formname = 'note_form_'+str(count), onvalidation = validateSubscription):#do proper validation for following
+                response.flash = 'new note added to ticker'
             subscriptions = db(querySub).select()
             notes = db(queryNote).select()
-            follow_list.append((follower.ticker, recent.price, subscriptions, follower.id, notes, follower.owned))
+            follow_list.append((follower.ticker, current.price, subscriptions, follower.id, notes, follower.owned, subscriptionForm, noteForm, historic_list))
         except:
-            follow_list.append((follower.ticker, 0, follower.id))
-    user = db(db.auth_user.id==auth.user_id).select().first()
+            i=1 #this should print some sort of error
     user.update_record(netWorth=worth)
     db.commit()
-    return dict(followForm=followForm, subscriptionForm=subscriptionForm, following=follow_list, noteForm=noteForm, user=user)
+    return dict(followForm=followForm, following=follow_list, user=user)
 
 @auth.requires_login()
 def delete_follow():
     id = request.args(0)
+    follower = db(db.following.id==id).select().first()
     remove = db(db.following.id==id).delete()
     if remove:
+        querySub = db.subscription.u_id == auth.user_id
+        querySub &= db.subscription.ticker == follower.ticker
+        queryNote = db.note.u_id == auth.user_id
+        queryNote &= db.note.ticker == follower.ticker
+        db(querySub).delete()
+        db(queryNote).delete()
         redirect(URL('profile'))
     return dict(remove=remove)
 

@@ -1,28 +1,49 @@
 {{extend 'layout.html'}}
 <h1>Current Net Worth</h1>
 <p>
-    $ {{=user.netWorth}}
+    $ <span id="NetWorth">{{=user.netWorth}}</span>
 </p>
 <h1>Follow a Stock</h1>
 <ul>
 {{=followForm}}
 </ul>
-<ul>
-{{=subscriptionForm}}
-</ul>
-<ul>
-{{=noteForm}}
-</ul>
 <h1>Currently Following</h1>
 <ul>
 {{for follow in following:}}
-    <p>{{=follow[0]}} | Current Price $ {{=follow[1]}} | You Own {{=follow[5]}} of this stock | <a href="{{=URL('delete_follow', args=follow[3])}}">  Delete</a></p>
-    {{for note in follow[4]:}}
-        <p>note: {{=note.note}} <a href="{{=URL('delete_note', args=note.id)}}">  Delete</a></p>
-    {{pass}}
+    <p>
+        {{=follow[8]}}
+    </p>
+    <p>{{=follow[0]}} | Current Price $ {{=follow[1]}} | You Own <input class="following" type="number" name={{=follow[3]}} min="0" max="1000000000" value={{=follow[5]}}> of this stock | <a href="{{=URL('delete_follow', args=follow[3])}}">  Delete</a></p>
+    <p>
+        Create a limit: {{=follow[6]}}
+    </p>
     {{for subscription in follow[2]:}}
-        <p>Limit: {{=subscription.value}} <a href="{{=URL('delete_subscription', args=subscription.id)}}">  Delete</a></p>
+        <p>Limit: <input class="subscription" type="number" name={{=subscription.id}} min="-1000000000" max="1000000000" value={{=subscription.value}}> <a href="{{=URL('delete_subscription', args=subscription.id)}}">  Delete</a></p>
+    {{pass}}
+    <p>
+        Create a note: {{=follow[7]}}
+    </p>
+    {{for note in follow[4]:}}
+        <p>note: <input class="note" type="text" name={{=note.id}} value={{=note.note}}> <a href="{{=URL('delete_note', args=note.id)}}">  Delete</a></p>
     {{pass}}
 -
 {{pass}}
 </ul>
+
+<script>
+    $(".following").change(function(){
+                   ajax('/SlugStock/default/update_follow/' + $(this).attr('name') + '/' + $(this).val(), ['id'], 'NetWorth');
+        });
+</script>
+
+<script>
+    $(".subscription").change(function(){
+                   ajax('/SlugStock/default/update_subsc/' + $(this).attr('name') + '/' + $(this).val());
+        });
+</script>
+
+<script>
+    $(".note").change(function(){
+                   ajax('/SlugStock/default/update_note/' + $(this).attr('name') + '/' + $(this).val());
+        });
+</script>

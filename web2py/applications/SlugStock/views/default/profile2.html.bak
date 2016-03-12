@@ -10,9 +10,6 @@
 <h1>Currently Following</h1>
 <ul>
 {{for follow in following:}}
-    <p>
-        {{=follow[8]}}
-    </p>
     <p>{{=follow[0]}} | Current Price $ {{=follow[1]}} | You Own <input class="following" type="number" name={{=follow[3]}} min="0" max="1000000000" value={{=follow[5]}}> of this stock | <a href="{{=URL('delete_follow', args=follow[3])}}">  Delete</a></p>
     <p>
         Create a limit: {{=follow[6]}}
