@@ -4,6 +4,8 @@ import re
 import datetime
 import csv
 
+from gluon.contrib.sms_utils import SMSCODES, sms_email
+
 def csv_daily():
     # gets unique tickers
     tickers = db(db.historic.id > 0).select(db.historic.ticker, distinct=True)
