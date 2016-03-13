@@ -12,6 +12,8 @@ import urllib2
 import re
 import datetime
 import csv
+import pygal
+from pygal.style import CleanStyle
 
 #takes in string containing the ticker name
 
@@ -102,6 +104,126 @@ def validateSubscription(form):
         form.errors.ticker = 'You are not following that stock.'
         return
 
+def two_week_graph():
+    stocks = db(db.historic.ticker==request.args(0)).select(orderby=~db.historic.Date, limitby=(0,10))
+    line_chart=pygal.Line(show_x_labels=True)
+    line_chart.title = 'Stock information for last two weeks'
+    data_points=[]
+    time_points=[]
+    for stock in reversed(stocks):
+        data_points.append(stock.Adj)
+        time_points.append(str(stock.Date.month)+'/' + str(stock.Date.day))
+    line_chart.add(request.args(0), data_points)
+    line_chart.x_labels = time_points
+    return line_chart.render()
+
+def month_graph():
+    stocks = db(db.historic.ticker==request.args(0)).select(orderby=~db.historic.Date, limitby=(0,26))
+    line_chart=pygal.Line(x_label_rotation=45)
+    line_chart.title = 'Stock information for last month'
+    data_points=[]
+    time_points=[]
+    for stock in reversed(stocks):
+        data_points.append(stock.Adj)
+        time_points.append(str(stock.Date.month)+'/'+str(stock.Date.day)+ '/' +str(stock.Date.year))
+    line_chart.add(request.args(0), data_points)
+    line_chart.x_labels = time_points
+    return line_chart.render()
+
+def three_month_graph():
+    stocks = db(db.historic.ticker==request.args(0)).select(orderby=~db.historic.Date, limitby=(0,66))
+    line_chart = pygal.Line(x_label_rotation=45)
+    line_chart.title = 'Stock information for last three months'
+    data_points=[]
+    time_points=[]
+    i = 65
+    while(i>0):
+        data_points.append(stocks[i].Adj)
+        time_points.append(str(stocks[i].Date.month)+'/'+str(stocks[i].Date.day)+'/'+ str(stocks[i].Date.year))
+        i-=3
+    print data_points
+    line_chart.add(request.args(0), data_points)
+    line_chart.x_labels = time_points
+    return line_chart.render()
+
+def one_year_graph():
+    stocks = db(db.historic.ticker==request.args(0)).select(orderby=~db.historic.Date, limitby=(0,260))
+    line_chart = pygal.Line(x_label_rotation=45)
+    line_chart.title = 'Stock information for last year'
+    data_points=[]
+    time_points=[]
+    i = 0
+    while(i<260):
+        data_points.append(stocks[i].Adj)
+        time_points.append(str(stocks[i].Date.month)+'/'+str(stocks[i].Date.day)+'/'+ str(stocks[i].Date.year))
+        i+=13
+    data_points.reverse()
+    time_points.reverse()
+    line_chart.add(request.args(0), data_points)
+    line_chart.x_labels = time_points
+    return line_chart.render()
+
+def five_year_graph():
+    stocks = db(db.historic.ticker==request.args(0)).select(orderby=~db.historic.Date, limitby=(0,1300))
+    line_chart = pygal.Line(x_label_rotation=45)
+    line_chart.title = 'Stock information for last five years'
+    data_points=[]
+    time_points=[]
+    i = 0
+    while(i<1300):
+        data_points.append(stocks[i].Adj)
+        time_points.append(str(stocks[i].Date.month)+'/' + str(stocks[i].Date.year))
+        i+=48
+    data_points.reverse()
+    time_points.reverse()
+    line_chart.add(request.args(0), data_points)
+    line_chart.x_labels = time_points
+    return line_chart.render()
+
+def max_graph():
+    stocks = db(db.historic.ticker==request.args(0)).select(orderby=~db.historic.Date)
+    line_chart = pygal.Line(x_label_rotation=45)
+    line_chart.title = 'Stock information for entire history'
+    line_chart.label_font_size=8
+    data_points=[]
+    time_points=[]
+    point_num = len(stocks)/30
+    i = 0
+    while(i<len(stocks)):
+        data_points.append(stocks[i].Adj)
+        time_points.append(str(stocks[i].Date.month)+'/' + str(stocks[i].Date.year))
+        i+=point_num
+    data_points.reverse()
+    time_points.reverse()
+    line_chart.add(request.args(0), data_points)
+    line_chart.x_labels = time_points
+    return line_chart.render()
+
+@auth.requires_login()
+def follow():
+    follower = db(db.following.id==request.args(0, cast=int)).select().first()
+    historic_list = []
+    #historic_records = db(db.historic.ticker == follower.ticker).select()
+    #for historic in historic_records:
+    #    historic_list.append(historic.Close)
+    current = db(db.current.ticker == follower.ticker).select().first()
+    querySub = db.subscription.u_id == auth.user_id
+    querySub &= db.subscription.ticker == follower.ticker
+    queryNote = db.note.u_id == auth.user_id
+    queryNote &= db.note.ticker == follower.ticker
+    subscriptionForm = SQLFORM(db.subscription, fields=['value'])
+    subscriptionForm.vars.ticker = follower.ticker
+    if subscriptionForm.accepts(request.vars, formname = 'sub_form_'+str(follower.id), onvalidation = validateSubscription):#do proper validation for following
+        response.flash = 'subscribed to new ticker'
+    noteForm = SQLFORM(db.note, fields=['note'])
+    noteForm.vars.ticker = follower.ticker
+    if noteForm.accepts(request.vars, formname = 'note_form_'+str(follower.id), onvalidation = validateSubscription):#do proper validation for following
+        response.flash = 'new note added to ticker'
+    subscriptions = db(querySub).select()
+    notes = db(queryNote).select()
+    follow = (follower.ticker, current.price, subscriptions, follower.id, notes, follower.owned, subscriptionForm, noteForm, historic_list)
+    return dict(follow=follow)
+
 @auth.requires_login()
 def update_follow():
     follow2update = db(db.following.id==request.args(0, cast=int)).select().first()
@@ -145,7 +267,7 @@ def profile():
     follow_list = []
     count = 0
     for follower in following:
-        try:
+        try:#this can be minimized
             count = count + 1
             historic_list = []
             #historic_records = db(db.historic.ticker == follower.ticker).select()
@@ -159,11 +281,11 @@ def profile():
             queryNote &= db.note.ticker == follower.ticker
             subscriptionForm = SQLFORM(db.subscription, fields=['value'])
             subscriptionForm.vars.ticker = follower.ticker
-            if subscriptionForm.accepts(request.vars, formname = 'sub_form_'+str(count), onvalidation = validateSubscription):#do proper validation for following
+            if subscriptionForm.accepts(request.vars, formname = 'sub_form_'+str(follower.id), onvalidation = validateSubscription):#do proper validation for following, NEED THIS STUFF HERE AND IN FOLLOW FUNCTION
                 response.flash = 'subscribed to new ticker'
             noteForm = SQLFORM(db.note, fields=['note'])
             noteForm.vars.ticker = follower.ticker
-            if noteForm.accepts(request.vars, formname = 'note_form_'+str(count), onvalidation = validateSubscription):#do proper validation for following
+            if noteForm.accepts(request.vars, formname = 'note_form_'+str(follower.id), onvalidation = validateSubscription):#do proper validation for following
                 response.flash = 'new note added to ticker'
             subscriptions = db(querySub).select()
             notes = db(queryNote).select()

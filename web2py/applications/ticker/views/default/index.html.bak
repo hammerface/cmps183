@@ -1,0 +1,11 @@
+<html>
+    <head></head>
+    <body>
+        <h1>Enter ticker symbol</h1>
+        <form action=".">
+            <input name="ticker" />
+            <input type="submit" />
+        </form>
+        <h1>The current price of {{=ticker}} is {{=priceinf}}</h1>
+    </body>
+</html>
