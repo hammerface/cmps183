@@ -136,7 +136,7 @@ def email_daily():
                 worth += stock.owned * current.price
                 follow_list.append((current.ticker, current.price))
             net_worth_change = worth - user.netWorth
-            follow_string = "Hello, " + user.first_name + ". Your current net worth is $" + user.netWorth + ", which is a $" + net_worth_change + " change from when you last checked. \n Here are the closing prices of the stocks you are currently following: \n"
+            follow_string = "Hello, " + user.first_name + ". Your current net worth is $" + str(worth) + ", which is a $" + str(net_worth_change) + " change from when you last checked. \n Here are the closing prices of the stocks you are currently following: \n"
             for x in follow_list:
                 follow_string += "Ticker: " + x[0] + " Closing Price: " + str(x[1]) + "\n"
             mail = auth.settings.mailer
@@ -154,4 +154,4 @@ def nextday():
     db.commit()
 
 from gluon.scheduler import Scheduler
-scheduler = Scheduler(db, heartbeat=120, tasks=dict(email=email_daily, updatePrices=updateYahooPrices, emergency_email=emergency_email, clear=remove_completed_tasks, nextday=nextday, csv_read=csv_read, csv_daily=csv_daily))
+scheduler = Scheduler(db, tasks=dict(email=email_daily, updatePrices=updateYahooPrices, emergency_email=emergency_email, clear=remove_completed_tasks, nextday=nextday, csv_read=csv_read, csv_daily=csv_daily))
