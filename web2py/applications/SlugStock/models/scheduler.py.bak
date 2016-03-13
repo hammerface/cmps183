@@ -130,10 +130,13 @@ def email_daily():
         following = db(db.following.u_id==user.id).select()
         follow_list = []
         if following:
+            worth = 0
             for stock in following:
                 current = db(db.current.ticker == stock.ticker).select().first()
+                worth += stock.owned * current.price
                 follow_list.append((current.ticker, current.price))
-            follow_string = "Hello, " + user.first_name + ". Here are the closing prices of the stocks you are currently following: \n"
+            net_worth_change = worth - user.netWorth
+            follow_string = "Hello, " + user.first_name + ". Your current net worth is $" + user.netWorth + ", which is a $" + net_worth_change + " change from when you last checked. \n Here are the closing prices of the stocks you are currently following: \n"
             for x in follow_list:
                 follow_string += "Ticker: " + x[0] + " Closing Price: " + str(x[1]) + "\n"
             mail = auth.settings.mailer
