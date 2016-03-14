@@ -1,3 +1,5 @@
 {{extend 'layout.html'}}
-
-{{=A('Go to your profile!', _href=URL('profile'))}}
+{{if not auth.is_logged_in():}}
+    {{=form}}
+{{else:}}
+asdfasdf{{pass}}

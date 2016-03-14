@@ -10,29 +10,11 @@
 <h1>Currently Following</h1>
 <ul>
 {{for follow in following:}}
-    <span onclick="jQuery('#id').val('{{=follow[3]}}');
-    ajax('{{=URL('default', 'follow', args=follow[3])}}', ['id'], 'OpenData');">
+    <span onclick="jQuery('#id').val('{{=follow[1]}}');
+    ajax('{{=URL('default', 'follow', args=follow[1])}}', ['id'], 'OpenData');">
         [{{=follow[0]}}]
     </span>
 {{pass}}
     <span id="OpenData">
     </span>
 </ul>
-
-<script>
-    $(".following").change(function(){
-                   ajax('/SlugStock/default/update_follow/' + $(this).attr('name') + '/' + $(this).val(), ['id'], 'NetWorth');
-        });
-</script>
-
-<script>
-    $(".subscription").change(function(){
-                   ajax('/SlugStock/default/update_subsc/' + $(this).attr('name') + '/' + $(this).val());
-        });
-</script>
-
-<script>
-    $(".note").change(function(){
-                   ajax('/SlugStock/default/update_note/' + $(this).attr('name') + '/' + $(this).val());
-        });
-</script>

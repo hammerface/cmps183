@@ -37,7 +37,7 @@ def csv_read(ticker):
                             Adj=row[6])
 
 def index():
-    return dict()
+    return dict(form=auth.register())
 
 def getYahooPrice(ticker):
     htmlfile = urllib2.urlopen("http://finance.yahoo.com/q?s="+ticker)
@@ -91,7 +91,8 @@ def validateTicker(form):
                              day=db(db.day.day!=None).select().first().day,
                              datetime=datetime.datetime.today())
             #get csv file and put in historic table
-            scheduler.queue_task('csv_read', [form.vars.ticker])
+            #scheduler.queue_task('csv_read', [form.vars.ticker])
+            csv_read(form.vars.ticker)
         else:
             form.errors.ticker = 'Stock not found.'
 
@@ -111,8 +112,12 @@ def two_week_graph():
     data_points=[]
     time_points=[]
     for stock in reversed(stocks):
-        data_points.append(stock.Adj)
-        time_points.append(str(stock.Date.month)+'/' + str(stock.Date.day))
+        try:
+            data_points.append(stock.Adj)
+            time_points.append(str(stock.Date.month)+'/' + str(stock.Date.day))
+        except IndexError:
+            data_points.append(0)
+            time_points.append(str(stock.Date.month)+'/' + str(stock.Date.day))
     line_chart.add(request.args(0), data_points)
     line_chart.x_labels = time_points
     return line_chart.render()
@@ -124,8 +129,12 @@ def month_graph():
     data_points=[]
     time_points=[]
     for stock in reversed(stocks):
-        data_points.append(stock.Adj)
-        time_points.append(str(stock.Date.month)+'/'+str(stock.Date.day)+ '/' +str(stock.Date.year))
+        try:
+            data_points.append(stock.Adj)
+            time_points.append(str(stock.Date.month)+'/'+str(stock.Date.day)+ '/' +str(stock.Date.year))
+        except IndexError:
+            data_points.append(0)
+            time_points.append(str(stock.Date.month)+'/' + str(stock.Date.day))
     line_chart.add(request.args(0), data_points)
     line_chart.x_labels = time_points
     return line_chart.render()
@@ -138,9 +147,14 @@ def three_month_graph():
     time_points=[]
     i = 65
     while(i>0):
-        data_points.append(stocks[i].Adj)
-        time_points.append(str(stocks[i].Date.month)+'/'+str(stocks[i].Date.day)+'/'+ str(stocks[i].Date.year))
-        i-=3
+        try:
+            data_points.append(stocks[i].Adj)
+            time_points.append(str(stocks[i].Date.month)+'/'+str(stocks[i].Date.day)+'/'+ str(stocks[i].Date.year))
+            i-=3
+        except IndexError:
+            data_points.append(0)
+            time_points.append('Invalid')
+            i-=3
     print data_points
     line_chart.add(request.args(0), data_points)
     line_chart.x_labels = time_points
@@ -154,9 +168,14 @@ def one_year_graph():
     time_points=[]
     i = 0
     while(i<260):
-        data_points.append(stocks[i].Adj)
-        time_points.append(str(stocks[i].Date.month)+'/'+str(stocks[i].Date.day)+'/'+ str(stocks[i].Date.year))
-        i+=13
+        try:
+            data_points.append(stocks[i].Adj)
+            time_points.append(str(stocks[i].Date.month)+'/'+str(stocks[i].Date.day)+'/'+ str(stocks[i].Date.year))
+            i+=13
+        except IndexError:
+            data_points.append(0)
+            time_points.append('Invalid')
+            i+=13
     data_points.reverse()
     time_points.reverse()
     line_chart.add(request.args(0), data_points)
@@ -171,9 +190,14 @@ def five_year_graph():
     time_points=[]
     i = 0
     while(i<1300):
-        data_points.append(stocks[i].Adj)
-        time_points.append(str(stocks[i].Date.month)+'/' + str(stocks[i].Date.year))
-        i+=48
+        try:
+            data_points.append(stocks[i].Adj)
+            time_points.append(str(stocks[i].Date.month)+'/' + str(stocks[i].Date.year))
+            i+=48
+        except IndexError:
+            data_points.append(0)
+            time_points.append('Invalid')
+            i+=48
     data_points.reverse()
     time_points.reverse()
     line_chart.add(request.args(0), data_points)
@@ -183,7 +207,7 @@ def five_year_graph():
 def max_graph():
     stocks = db(db.historic.ticker==request.args(0)).select(orderby=~db.historic.Date)
     line_chart = pygal.Line(x_label_rotation=45)
-    line_chart.title = 'Stock information for entire history'
+    line_chart.title = 'Entire history of for ' + str(request.args(0))
     line_chart.label_font_size=8
     data_points=[]
     time_points=[]
@@ -201,28 +225,52 @@ def max_graph():
 
 @auth.requires_login()
 def follow():
+    response.view = 'default/follow.html'
     follower = db(db.following.id==request.args(0, cast=int)).select().first()
-    historic_list = []
-    #historic_records = db(db.historic.ticker == follower.ticker).select()
-    #for historic in historic_records:
-    #    historic_list.append(historic.Close)
     current = db(db.current.ticker == follower.ticker).select().first()
     querySub = db.subscription.u_id == auth.user_id
     querySub &= db.subscription.ticker == follower.ticker
     queryNote = db.note.u_id == auth.user_id
     queryNote &= db.note.ticker == follower.ticker
-    subscriptionForm = SQLFORM(db.subscription, fields=['value'])
-    subscriptionForm.vars.ticker = follower.ticker
-    if subscriptionForm.accepts(request.vars, formname = 'sub_form_'+str(follower.id), onvalidation = validateSubscription):#do proper validation for following
-        response.flash = 'subscribed to new ticker'
-    noteForm = SQLFORM(db.note, fields=['note'])
-    noteForm.vars.ticker = follower.ticker
-    if noteForm.accepts(request.vars, formname = 'note_form_'+str(follower.id), onvalidation = validateSubscription):#do proper validation for following
-        response.flash = 'new note added to ticker'
     subscriptions = db(querySub).select()
     notes = db(queryNote).select()
-    follow = (follower.ticker, current.price, subscriptions, follower.id, notes, follower.owned, subscriptionForm, noteForm, historic_list)
+    follow = (follower.ticker, current.price, subscriptions, follower.id, notes, follower.owned)
     return dict(follow=follow)
+
+@auth.requires_login()
+def add_limit():
+    db.subscription.insert(u_id=auth.user_id, ticker=request.args(1, cast=str), value=request.vars.new_limit)
+    db.commit()
+    response.view = 'default/follow.html'
+    follower = db(db.following.id==request.args(0, cast=int)).select().first()
+    current = db(db.current.ticker == follower.ticker).select().first()
+    querySub = db.subscription.u_id == auth.user_id
+    querySub &= db.subscription.ticker == follower.ticker
+    queryNote = db.note.u_id == auth.user_id
+    queryNote &= db.note.ticker == follower.ticker
+    subscriptions = db(querySub).select()
+    notes = db(queryNote).select()
+    follow = (follower.ticker, current.price, subscriptions, follower.id, notes, follower.owned)
+    return dict(follow=follow)
+
+@auth.requires_login()
+def add_note():
+    input_string = request.vars.new_note
+    input_string.replace (" ", "")
+    db.note.insert(u_id=auth.user_id, ticker=request.args(1, cast=str), note=input_string)
+    db.commit()
+    response.view = 'default/follow.html'
+    follower = db(db.following.id==request.args(0, cast=int)).select().first()
+    current = db(db.current.ticker == follower.ticker).select().first()
+    querySub = db.subscription.u_id == auth.user_id
+    querySub &= db.subscription.ticker == follower.ticker
+    queryNote = db.note.u_id == auth.user_id
+    queryNote &= db.note.ticker == follower.ticker
+    subscriptions = db(querySub).select()
+    notes = db(queryNote).select()
+    follow = (follower.ticker, current.price, subscriptions, follower.id, notes, follower.owned)
+    return dict(follow=follow)
+
 
 @auth.requires_login()
 def update_follow():
@@ -267,31 +315,12 @@ def profile():
     follow_list = []
     count = 0
     for follower in following:
-        try:#this can be minimized
-            count = count + 1
-            historic_list = []
-            #historic_records = db(db.historic.ticker == follower.ticker).select()
-            #for historic in historic_records:
-            #    historic_list.append(historic.Close)
+        try:
             current = db(db.current.ticker == follower.ticker).select().first()
             worth += follower.owned * current.price
-            querySub = db.subscription.u_id == auth.user_id
-            querySub &= db.subscription.ticker == follower.ticker
-            queryNote = db.note.u_id == auth.user_id
-            queryNote &= db.note.ticker == follower.ticker
-            subscriptionForm = SQLFORM(db.subscription, fields=['value'])
-            subscriptionForm.vars.ticker = follower.ticker
-            if subscriptionForm.accepts(request.vars, formname = 'sub_form_'+str(follower.id), onvalidation = validateSubscription):#do proper validation for following, NEED THIS STUFF HERE AND IN FOLLOW FUNCTION
-                response.flash = 'subscribed to new ticker'
-            noteForm = SQLFORM(db.note, fields=['note'])
-            noteForm.vars.ticker = follower.ticker
-            if noteForm.accepts(request.vars, formname = 'note_form_'+str(follower.id), onvalidation = validateSubscription):#do proper validation for following
-                response.flash = 'new note added to ticker'
-            subscriptions = db(querySub).select()
-            notes = db(queryNote).select()
-            follow_list.append((follower.ticker, current.price, subscriptions, follower.id, notes, follower.owned, subscriptionForm, noteForm, historic_list))
+            follow_list.append((follower.ticker, follower.id))
         except:
-            i=1 #this should print some sort of error
+            i=1 #do nothing
     user.update_record(netWorth=worth)
     db.commit()
     return dict(followForm=followForm, following=follow_list, user=user)
@@ -313,19 +342,35 @@ def delete_follow():
 
 @auth.requires_login()
 def delete_subscription():
-    id = request.args(0)
-    remove = db(db.subscription.id==id).delete()
-    if remove:
-        redirect(URL('profile'))
-    return dict(remove=remove)
+    id = request.args(1)
+    db(db.subscription.id==id).delete()
+    response.view = 'default/follow.html'
+    follower = db(db.following.id==request.args(0, cast=int)).select().first()
+    current = db(db.current.ticker == follower.ticker).select().first()
+    querySub = db.subscription.u_id == auth.user_id
+    querySub &= db.subscription.ticker == follower.ticker
+    queryNote = db.note.u_id == auth.user_id
+    queryNote &= db.note.ticker == follower.ticker
+    subscriptions = db(querySub).select()
+    notes = db(queryNote).select()
+    follow = (follower.ticker, current.price, subscriptions, follower.id, notes, follower.owned)
+    return dict(follow=follow)
 
 @auth.requires_login()
 def delete_note():
-    id = request.args(0)
-    remove = db(db.note.id==id).delete()
-    if remove:
-        redirect(URL('profile'))
-    return dict(remove=remove)
+    id = request.args(1)
+    db(db.note.id==id).delete()
+    response.view = 'default/follow.html'
+    follower = db(db.following.id==request.args(0, cast=int)).select().first()
+    current = db(db.current.ticker == follower.ticker).select().first()
+    querySub = db.subscription.u_id == auth.user_id
+    querySub &= db.subscription.ticker == follower.ticker
+    queryNote = db.note.u_id == auth.user_id
+    queryNote &= db.note.ticker == follower.ticker
+    subscriptions = db(querySub).select()
+    notes = db(queryNote).select()
+    follow = (follower.ticker, current.price, subscriptions, follower.id, notes, follower.owned)
+    return dict(follow=follow)
 
 def user():
     return dict(form=auth())

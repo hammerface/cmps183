@@ -10,8 +10,8 @@
 <h1>Currently Following</h1>
 <ul>
 {{for follow in following:}}
-    <span onclick="jQuery('#id').val('{{=follow[3]}}');
-    ajax('{{=URL('default', 'follow', args=follow[3])}}', ['id'], 'OpenData');">
+    <span onclick="jQuery('#id').val('{{=follow[1]}}');
+    ajax('{{=URL('default', 'follow', args=follow[1])}}', ['id'], 'OpenData');">
         [{{=follow[0]}}]
     </span>
 {{pass}}
