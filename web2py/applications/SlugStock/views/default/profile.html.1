@@ -1,0 +1,24 @@
+{{extend 'layout.html'}}
+<link href="{{=URL('static', 'css/profile.css')}}" rel="stylesheet" type="text/css" />
+<h1>Current Net Worth</h1>
+<p>
+    $ <span id="NetWorth">{{=user.netWorth}}</span>
+</p>
+<h1>Follow a Stock</h1>
+<ul>
+{{=followForm}}
+</ul>
+<h1>Currently Following</h1>
+<div class="container">
+    <div class="row">
+        <div class="list-group">
+            {{for follow in following:}}
+                <button type="button" class="list-group-item" onclick="jQuery('#id').val('{{=follow[1]}}');
+                ajax('{{=URL('default', 'follow', args=follow[1])}}', ['id'], 'OpenData');">{{=follow[0]}}</button>
+        {{pass}}
+        
+        </div>
+    </div>
+</div>
+</div>
+<div id="OpenData">

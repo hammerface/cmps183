@@ -37,7 +37,9 @@ def csv_read(ticker):
                             Adj=row[6])
 
 def index():
-    return dict(form=auth.register())
+    if auth.is_logged_in():
+        redirect(URL('profile'))
+    return dict(loginForm=auth.login(), signupForm=auth.register())
 
 def getYahooPrice(ticker):
     htmlfile = urllib2.urlopen("http://finance.yahoo.com/q?s="+ticker)
@@ -91,8 +93,8 @@ def validateTicker(form):
                              day=db(db.day.day!=None).select().first().day,
                              datetime=datetime.datetime.today())
             #get csv file and put in historic table
-            #scheduler.queue_task('csv_read', [form.vars.ticker])
-            csv_read(form.vars.ticker)
+            scheduler.queue_task('csv_read', [form.vars.ticker], timeout = 6000)
+            #csv_read(form.vars.ticker)
         else:
             form.errors.ticker = 'Stock not found.'
 
@@ -255,9 +257,7 @@ def add_limit():
 
 @auth.requires_login()
 def add_note():
-    input_string = request.vars.new_note
-    input_string.replace (" ", "")
-    db.note.insert(u_id=auth.user_id, ticker=request.args(1, cast=str), note=input_string)
+    db.note.insert(u_id=auth.user_id, ticker=request.args(1, cast=str), note="")
     db.commit()
     response.view = 'default/follow.html'
     follower = db(db.following.id==request.args(0, cast=int)).select().first()

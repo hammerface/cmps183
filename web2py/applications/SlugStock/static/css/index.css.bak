@@ -1,0 +1,31 @@
+body {
+background: url("https://lh3.googleusercontent.com/-pyNE5kxOkag/U1dGgakiYCI/AAAAAAAAQvk/ppok3Jx0auo/w2048-h1152/DeceptionPassBananaSlug1.jpg") no-repeat center center fixed;
+-webkit-background-size: cover;
+-moz-background-size: cover;
+-o-background-size: cover;
+background-size: cover;
+}
+
+h2 span { 
+   color: white; 
+   font: bold 100px/45px Helvetica, Sans-Serif; 
+   font-style:italic;
+   font-family: cursive;
+   letter-spacing: -1px;  
+   background: rgb(0, 0, 0); /* fallback color */
+   background: rgba(0, 0, 0, 0.7);
+   padding: 10px;
+}
+
+h2{
+	text-align: center;
+}
+
+.userInput{
+   margin: 0 auto;
+     width: 300px;
+    background: rgb(0, 0, 0); /* fallback color */
+   background: rgba(255, 255, 0, 0.7);
+   padding: 10px;
+
+}

@@ -31,6 +31,8 @@ auth.settings.registration_requires_verification = False
 auth.settings.registration_requires_approval = False
 auth.settings.reset_password_requires_verification = True
 
+auth.settings.login_next = URL('default/profile')
+
 #########################################################################
 ## Define your tables below (or better in another model file) for example
 ##
@@ -111,7 +113,7 @@ db.define_table('subscription',
 db.define_table('note',
    Field('u_id', 'reference auth_user', default=auth.user_id, readable=False, writable=False),
    Field('ticker', 'string'),
-   Field('note', 'text')
+   Field('note', 'string')
    )
 
 db.subscription.ticker.requires = IS_NOT_EMPTY()

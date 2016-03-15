@@ -1,7 +1,10 @@
-<p>
-        {{=follow[0]}} | Current Price $ {{=follow[1]}} | You Own <input class="following" type="number" name={{=follow[3]}} min="0" max="1000000000" value={{=follow[5]}}> of this stock | <a href="{{=URL('delete_follow', args=follow[3])}}">  Delete</a>
-    </p>
-
+<div class="col-xs-12 col-sm-6 col-md-1 col-lg-1" >
+     <h4>{{=follow[0]}}</h4>
+</div>
+<div class="col-xs-12 col-sm-6 col-md-11 col-lg-11" >
+    <h4>${{=follow[1]}} | You Own <input class="following" type="number" name={{=follow[3]}} min="0" max="1000000000" value={{=follow[5]}}> of this stock | <a href="{{=URL('delete_follow', args=follow[3])}}">Delete</a>
+    </h4>
+</div>
     <p>
         Create a Limit:
         <form id="limit_form">
@@ -17,11 +20,7 @@
     {{pass}}
 
     <p>
-        Create a Note:
-        <form id="note_form">
-            <input name="new_note" id="new_note" type="text" value="">
-        </form>
-        <a href="javascript:;" onclick="ajax('{{=URL('default', 'add_note', args=[follow[3], follow[0]])}}', ['new_note'], 'OpenData')">Submit</a>
+        <a href="javascript:;" onclick="ajax('{{=URL('default', 'add_note', args=[follow[3], follow[0]])}}', [], 'OpenData')">Create a Note</a>
     </p>
 
     {{for note in follow[4]:}}
@@ -29,36 +28,38 @@
             note: <input class="note" type="text" name={{=note.id}} value={{=note.note}}> <a href="javascript:;" onclick="ajax('{{=URL('default', 'delete_note', args=[follow[3], note.id])}}', [], 'OpenData')">Delete</a>
         </p>
     {{pass}}
-
-    <p onclick="jQuery('#id').val('{{=follow[3]}}');
+    <p>
+        Press buttons for charts!
+</p>
+    <button type="button"  onclick="jQuery('#id').val('{{=follow[3]}}');
     ajax('{{=URL('default', 'two_week_graph', args=follow[0])}}', ['id'], 'Graph');">
-        2WEEKGRAPH-[{{=follow[0]}}]
-    </p>
+        2 Weeks
+    </button>
 
-    <p onclick="jQuery('#id').val('{{=follow[3]}}');
+    <button type="button" onclick="jQuery('#id').val('{{=follow[3]}}');
     ajax('{{=URL('default', 'month_graph', args=follow[0])}}', ['id'], 'Graph');">
-        MONTHGRAPH-[{{=follow[0]}}]
-    </p>
+        1 Month
+    </button>
 
-    <p onclick="jQuery('#id').val('{{=follow[3]}}');
+    <button type="button" onclick="jQuery('#id').val('{{=follow[3]}}');
     ajax('{{=URL('default', 'three_month_graph', args=follow[0])}}', ['id'], 'Graph');">
-        3MONTHGRAPH-[{{=follow[0]}}]
-    </p>
+        3 Month
+    </button>
 
-    <p onclick="jQuery('#id').val('{{=follow[3]}}');
+    <button type="button" onclick="jQuery('#id').val('{{=follow[3]}}');
     ajax('{{=URL('default', 'one_year_graph', args=follow[0])}}', ['id'], 'Graph');">
-        1YEARGRAPH-[{{=follow[0]}}]
-    </p>
+        1 Year
+    </button>
 
-    <p onclick="jQuery('#id').val('{{=follow[3]}}');
+    <button type="button" onclick="jQuery('#id').val('{{=follow[3]}}');
     ajax('{{=URL('default', 'five_year_graph', args=follow[0])}}', ['id'], 'Graph');">
-        5YEARGRAPH-[{{=follow[0]}}]
-    </p>
+       5 Year
+    </button>
 
-    <p onclick="jQuery('#id').val('{{=follow[3]}}');
+    <button type="button" onclick="jQuery('#id').val('{{=follow[3]}}');
     ajax('{{=URL('default', 'max_graph', args=follow[0])}}', ['id'], 'Graph');">
-        MAX-[{{=follow[0]}}]
-    </p>
+        Max
+    </button>
 
     <span id="Graph">
     </span>

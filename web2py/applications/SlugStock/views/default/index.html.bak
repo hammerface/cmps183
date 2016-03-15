@@ -1,6 +1,30 @@
-{{extend 'layout.html'}}
+<!--{{#extend 'layout.html'}}-->
+
+  <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+</head>
+<link href="{{=URL('static', 'css/index.css')}}" rel="stylesheet" type="text/css" />
+
+
+<body>
+<br><br><br>
+<h2><span>SlugStock</span></h2>
+<title>SlugStock</title>
 {{if not auth.is_logged_in():}}
-    {{=form}}
+<br><br><br><br><br>
+
+<div class="userInput">
+    <b>Login</b>
+    {{=loginForm}}
+</div>
+<div class="userInput">
+    <b>Sign Up</b>
+    {{=signupForm}}
+</div>
+
 {{else:}}
-    <meta http-equiv="refresh" content="0; _href URL='https://slugstock.pythonanywhere.com/SlugStock/default/profile2.html'" />
-{{pass}}
+    {{pass}}
+</body>

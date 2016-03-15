@@ -1,20 +1,34 @@
 {{extend 'layout.html'}}
-<h1>Current Net Worth</h1>
-<p>
-    $ <span id="NetWorth">{{=user.netWorth}}</span>
-</p>
-<h1>Follow a Stock</h1>
-<ul>
-{{=followForm}}
-</ul>
-<h1>Currently Following</h1>
-<ul>
-{{for follow in following:}}
-    <span onclick="jQuery('#id').val('{{=follow[1]}}');
-    ajax('{{=URL('default', 'follow', args=follow[1])}}', ['id'], 'OpenData');">
-        [{{=follow[0]}}]
-    </span>
-{{pass}}
-    <span id="OpenData">
-    </span>
-</ul>
+<link href="{{=URL('static', 'css/profile.css')}}" rel="stylesheet" type="text/css" />
+
+
+
+<div class="row thumbnail col-xs-12 col-sm-12 col-md-9 col-lg-9 oneBackgroundGrey">
+    <div class="col-xs-12 col-sm-6 col-md-5 col-lg-5">
+        <h2>Current Net Worth</h2>
+        <h2>
+            $ <span id="NetWorth">{{=user.netWorth}}</span>
+        </h2>
+    </div>
+    <div class="col-xs-12 col-sm-6 col-md-7 col-lg-7 oneBackgroundGrey">
+        <h2>Follow a New Stock</h2>
+        <ul>
+            {{=followForm}}
+        </ul>
+    </div>
+<div id="OpenData" class="col-xs-12 col-sm-12 col-md-12 col-lg-12twoBackgroundGrey"></div>
+</div>
+
+
+<div class="col-xs-12 col-sm-12 col-md-3 col-lg-3" >
+    <div class="list-group">
+        <h1 style="text-align : center">Currently Following</h1>
+        <p style="text-align : center">Press button to view stock details!</p>
+        <!--<div class="list-group">-->
+        {{for follow in following:}}
+            <button type="button" class="list-group-item" onclick="jQuery('#id').val('{{=follow[1]}}');
+        ajax('{{=URL('default', 'follow', args=follow[1])}}', ['id'], 'OpenData');">{{=follow[0]}}</button>
+        {{pass}}
+        <!--</div>-->
+    </div>
+</div>

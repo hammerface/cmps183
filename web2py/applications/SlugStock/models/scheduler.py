@@ -47,6 +47,7 @@ def csv_daily():
                                 Close=rowcr[4],
                                 Volume=rowcr[5],
                                 Adj=rowcr[6])
+                db.commit()
                 i = i + 1
         except urllib2.HTTPError:
             print 'historic stock info not found'
@@ -72,6 +73,7 @@ def csv_read(ticker):
                             Close=row[4],
                             Volume=row[5],
                             Adj=row[6])
+        db.commit()
 
 def remove_completed_tasks():
     completedTasks = db(db.scheduler_task.status=="COMPLETED").delete()
